@@ -1,23 +1,51 @@
-import logo from './logo.svg';
-import './App.css';
+import { useState } from "react";
+import { SearchContext, MovieContext } from "./context/movieContext";
+
+import MovieData from "./components/movieData/MovieData";
+import Search from "./components/search/Search";
+
+import "./App.css";
 
 function App() {
+  const [searchValue, setSearchValue] = useState("");
+  const [results, setResults] = useState([]);
+  const [movieSelected, setMovieSelected] = useState(null);
+  const [searching, setSearching] = useState(false);
+
+  async function handleSearchChange(inputValue) {
+    setSearchValue(inputValue);
+    let API_KEY = process.env.REACT_APP_API_KEY;
+    const response = await fetch(
+      `http://www.omdbapi.com/?apikey=${API_KEY}&s=${inputValue}`
+    );
+
+    const data = await response.json();
+
+    setResults(data.Search || []);
+    setSearching(true);
+  }
+
+  function handleMovieSelected(movieSelected) {
+    setMovieSelected(movieSelected);
+    setSearching(false);
+  }
+
+  const searchContextValue = {
+    handleMovieSelected,
+    handleSearchChange,
+    title: searchValue,
+    results,
+    searching,
+  };
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <SearchContext.Provider value={searchContextValue}>
+        <Search />
+      </SearchContext.Provider>
+      <MovieContext.Provider value={movieSelected}>
+        <MovieData />
+      </MovieContext.Provider>
     </div>
   );
 }
